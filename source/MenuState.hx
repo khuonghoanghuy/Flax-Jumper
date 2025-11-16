@@ -1,39 +1,50 @@
 package;
 
-import djFlixel.ui.FlxMenu;
-import flixel.FlxState;
+import flixel.FlxG;
+import flixel.util.FlxColor;
+import flixel.math.FlxMath;
+import flixel.group.FlxGroup.FlxTypedGroup;
+import flixel.text.FlxText;
 
-class MenuState extends FlxState
+class MenuState extends GameState
 {
-    var menu:FlxMenu;
-    
+    var menuItem:Array<String> = ["Start", "Options", "Exit"];
+    var menuGroup:FlxTypedGroup<FlxText>;
+    var menuSelected:Int = 0;
+
     override function create() {
         super.create();
 
-        menu = new FlxMenu(30, 50, 0);
-        // create page
-        menu.createPage("main_menu", "Main Menu").add('
-			-|Play|link|nothing
-			-|Options|link|@options
-			-|Exit|link|exit| ?pop=:YES:NO');
-        menu.createPage("options", "Options").add('
-            -|Full Screen|toggle|set_fullscreen
-            -|Back|link|@back
-        ');
+        menuGroup = new FlxTypedGroup<FlxText>();
+        add(menuGroup);
 
-        // handle event
-        menu.onItemEvent = function (event, item) {
-            if (event == fire) switch (item.ID) {
-                case "set_fullscreen":
-
-                case "exit":
-                case "back":
-                case _:
-            }
+        for (i in 0...menuItem.length) {
+            var text = new FlxText(20, 20 + (i * 22), 0, menuItem[i].toUpperCase(), 24);
+            text.ID = i;
+            text.alignment = LEFT;
+            menuGroup.add(text);
         }
-    }   
+
+        changeSelection();
+    }
     
     override function update(elapsed:Float) {
         super.update(elapsed);
+
+        if (controls.justPressed.ui_up || controls.justPressed.ui_down) {
+            changeSelection(controls.justPressed.ui_up ? -1 : 1);
+        }
+
+        if (controls.justPressed.accept) {
+            FlxG.switchState(PlayState.new);
+        }
+    }
+
+    function changeSelection(change:Int = 0) {
+        menuSelected = FlxMath.wrap(change + menuSelected, 0, menuItem.length - 1);
+        menuGroup.forEachExists(function (text) {
+            var isSelected:Bool = text.ID == menuSelected;
+            text.color = isSelected ? FlxColor.YELLOW : FlxColor.WHITE;
+        });
     }
 }
